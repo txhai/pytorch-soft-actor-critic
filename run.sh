@@ -1,0 +1,1 @@
+~/anaconda3/bin/python main.py --env-name HalfCheetah-v2 --gpu 0 --log_dir /home/share/log/HalfCheetah-v2/txhai-sonoma/baselines/sac_hard_deterministic --num_steps 100000 --policy Deterministic --tau 1 --target_update_interval 1000

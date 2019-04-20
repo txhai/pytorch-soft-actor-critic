@@ -42,6 +42,7 @@ class SAC(object):
             self.value_optim = Adam(self.value.parameters(), lr=args.lr)
             hard_update(self.value_target, self.value)
         else:
+            self.alpha = args.alpha
             self.policy = DeterministicPolicy(self.num_inputs, self.action_space, args.hidden_size).to(self.device)
             self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
 
@@ -71,6 +72,7 @@ class SAC(object):
         mask_batch = torch.FloatTensor(mask_batch).to(self.device).unsqueeze(1)
 
         qf1, qf2 = self.critic(state_batch, action_batch) # Two Q-functions to mitigate positive bias in the policy improvement step
+
         pi, log_pi, _ = self.policy.sample(state_batch)
 
         if self.policy_type == "Gaussian":
@@ -91,9 +93,9 @@ class SAC(object):
                 next_q_value = reward_batch + mask_batch * self.gamma * (vf_next_target)
         else:
             alpha_loss = torch.tensor(0.).to(self.device)
-            alpha_logs = self.alpha  # For TensorboardX logs
+            alpha_logs = torch.tensor(self.alpha)  # For TensorboardX logs
             with torch.no_grad():
-                next_state_action, _, _, _, _, = self.policy.sample(next_state_batch)
+                next_state_action, _, _ = self.policy.sample(next_state_batch)
                 # Use a target critic network for deterministic policy and eradicate the value value network completely.
                 qf1_next_target, qf2_next_target = self.critic_target(next_state_batch, next_state_action)
                 min_qf_next_target = torch.min(qf1_next_target, qf2_next_target)
